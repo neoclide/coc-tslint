@@ -62,13 +62,10 @@ export async function activate(context: ExtensionContext): Promise<void> {
   const enable = config.enable
   if (enable === false) return
   const file = context.asAbsolutePath('./lib/server/index.js')
-  const selector = [
-    { language: 'typescript', scheme: 'file' },
-    { language: 'typescript.jsx', scheme: 'file' },
-    { language: 'typescript.tsx', scheme: 'file' },
-    { language: 'javascript', scheme: 'file' },
-    { language: 'javascript.jsx', scheme: 'file' }
-  ]
+  const filetypes = config.filetypes || ['typescript', 'typescript.jsx', 'typescript.tsx']
+  const selector = filetypes.map(filetype => {
+    return { language: filetype, scheme: 'file' }
+  })
 
   let serverOptions: ServerOptions = {
     module: file,
