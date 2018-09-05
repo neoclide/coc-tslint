@@ -6,21 +6,11 @@ The `tslint` module is resolved from current file and then global modules of `np
 
 ## Install
 
-Install [nodejs](https://nodejs.org/en/download/) and [yarn](https://yarnpkg.com/en/docs/install).
+In your vim/neovim run command:
 
 ``` sh
-curl -sL install-node.now.sh/lts | sh
-curl --compressed -o- -L https://yarnpkg.com/install.sh | bash
+:CocInstall coc-tslint
 ```
-
-For [vim-plug](https://github.com/junegunn/vim-plug) user. Add:
-
-``` vim
-Plug 'neoclide/coc.nvim', {'do': { -> coc#util#install()}}
-Plug 'neoclide/coc-tslint', {'do': 'yarn install --production'}
-```
-
-to your `.vimrc` or `init.vim`, restart vim and run `:PlugInstall`.
 
 ## Features
 
@@ -30,7 +20,6 @@ to your `.vimrc` or `init.vim`, restart vim and run `:PlugInstall`.
   * `tslint.fixAllProblems` fix problems of current buffer.
   * `tslint.createConfig` create tslint config file.
   * `tslint.lintProject` lint current project
-
 
 ## Configuration options
 
