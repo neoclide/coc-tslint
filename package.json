@@ -1,6 +1,6 @@
 {
   "name": "coc-tslint",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "tslint extension for coc",
   "main": "lib/index.js",
   "publisher": "chemzqm",
@@ -109,10 +109,10 @@
     "@chemzqm/tslint-config": "^1.0.17",
     "@types/node": "^10.9.4",
     "coc.nvim": "^0.0.15",
-    "rimraf": "^2.6.2",
-    "typescript": "^3.0.3"
+    "rimraf": "^2.6.2"
   },
   "dependencies": {
+    "typescript": "^3.0.3",
     "minimatch": "^3.0.4",
     "semver": "^5.5.1",
     "tslib": "^1.9.3",
