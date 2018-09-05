@@ -413,10 +413,6 @@ loose-envify@^1.0.0:
   dependencies:
     js-tokens "^3.0.0 || ^4.0.0"
 
-merge@^1.2.0:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/merge/-/merge-1.2.0.tgz#7531e39d4949c281a66b8c5a6e0265e8b05894da"
-
 minimatch@^3.0.4:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-3.0.4.tgz#5166e286457f03306064be5497e8dbb0c3d32083"
@@ -622,23 +618,16 @@ vscode-jsonrpc@^3.6.2:
   version "3.6.2"
   resolved "https://registry.yarnpkg.com/vscode-jsonrpc/-/vscode-jsonrpc-3.6.2.tgz#3b5eef691159a15556ecc500e9a8a0dd143470c8"
 
-vscode-languageserver-protocol@^3.10.3, vscode-languageserver-protocol@^3.12.0, vscode-languageserver-protocol@^3.9.0:
+vscode-languageserver-protocol@^3.10.3, vscode-languageserver-protocol@^3.12.0:
   version "3.12.0"
   resolved "https://registry.yarnpkg.com/vscode-languageserver-protocol/-/vscode-languageserver-protocol-3.12.0.tgz#5b23501292abad88f0463b01e83ff98e64a37652"
   dependencies:
     vscode-jsonrpc "^3.6.2"
     vscode-languageserver-types "^3.12.0"
 
-vscode-languageserver-types@^3.12.0, vscode-languageserver-types@^3.9.0:
+vscode-languageserver-types@^3.12.0:
   version "3.12.0"
   resolved "https://registry.yarnpkg.com/vscode-languageserver-types/-/vscode-languageserver-types-3.12.0.tgz#f96051381b6a050b7175b37d6cb5d2f2eb64b944"
-
-vscode-languageserver@^4.3.0:
-  version "4.4.2"
-  resolved "https://registry.yarnpkg.com/vscode-languageserver/-/vscode-languageserver-4.4.2.tgz#600ae9cc7a6ff1e84d93c7807840c2cb5b22821b"
-  dependencies:
-    vscode-languageserver-protocol "^3.10.3"
-    vscode-uri "^1.0.5"
 
 vscode-languageserver@^5.0.3:
   version "5.0.3"
@@ -660,14 +649,3 @@ which@^1.3.1:
 wrappy@1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/wrappy/-/wrappy-1.0.2.tgz#b5243d8f3ec1aa35f1364605bc0d1036e30ab69f"
-
-wxml-langserver@^2.0.4:
-  version "2.0.4"
-  resolved "https://registry.yarnpkg.com/wxml-langserver/-/wxml-langserver-2.0.4.tgz#b9ed1ad435471d86a1e5f53b976a392e8d38f42e"
-  dependencies:
-    merge "^1.2.0"
-    uuid "^3.3.2"
-    vscode-jsonrpc "^3.6.2"
-    vscode-languageserver "^4.3.0"
-    vscode-languageserver-protocol "^3.9.0"
-    vscode-languageserver-types "^3.9.0"

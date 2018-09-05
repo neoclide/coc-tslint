@@ -1,6 +1,6 @@
 {
   "name": "coc-tslint",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "tslint extension for coc",
   "main": "lib/index.js",
   "publisher": "chemzqm",
@@ -41,11 +41,18 @@
         "tslint.trace.server": {
           "type": "string",
           "default": "off",
-          "enum": ["off", "messages", "verbose"]
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ]
         },
         "tslint.execArgv": {
           "type": "array",
-          "default": ["--nolazy", "--inspect-brk=6045"],
+          "default": [
+            "--nolazy",
+            "--inspect-brk=6045"
+          ],
           "items": {
             "type": "string"
           }
@@ -83,7 +90,10 @@
           "type": "string",
           "default": "onType",
           "description": "Run mode of tslint",
-          "enum": ["onType", "onSave"]
+          "enum": [
+            "onType",
+            "onSave"
+          ]
         },
         "tslint.alwaysShowRuleFailuresAsWarnings": {
           "type": "boolean",
@@ -100,13 +110,13 @@
     "@types/node": "^10.9.4",
     "coc.nvim": "^0.0.15",
     "rimraf": "^2.6.2",
-    "tslint": "^5.11.0",
     "typescript": "^3.0.3"
   },
   "dependencies": {
     "minimatch": "^3.0.4",
     "semver": "^5.5.1",
     "tslib": "^1.9.3",
+    "tslint": "^5.11.0",
     "vscode-languageserver": "^5.0.3",
     "vscode-languageserver-protocol": "^3.12.0",
     "vscode-uri": "^1.0.6",
