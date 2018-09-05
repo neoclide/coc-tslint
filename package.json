@@ -1,0 +1,116 @@
+{
+  "name": "coc-tslint",
+  "version": "1.0.0",
+  "description": "tslint extension for coc",
+  "main": "lib/index.js",
+  "publisher": "chemzqm",
+  "engines": {
+    "coc": "^0.0.15"
+  },
+  "scripts": {
+    "clean": "rimraf lib",
+    "build": "tsc -p tsconfig.json",
+    "prepare": "yarn clean && yarn build"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "title": "Fix all auto-fixable problems",
+        "category": "TSLint",
+        "command": "tslint.fixAllProblems"
+      },
+      {
+        "title": "Create a 'tslint.json' file",
+        "category": "TSLint",
+        "command": "tslint.createConfig"
+      },
+      {
+        "title": "Show output",
+        "category": "TSLint",
+        "command": "tslint.showOutputChannel"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Tslint",
+      "properties": {
+        "tslint.enable": {
+          "type": "boolean",
+          "default": true
+        },
+        "tslint.trace.server": {
+          "type": "string",
+          "default": "off",
+          "enum": ["off", "messages", "verbose"]
+        },
+        "tslint.execArgv": {
+          "type": "array",
+          "default": ["--nolazy", "--inspect-brk=6045"],
+          "items": {
+            "type": "string"
+          }
+        },
+        "tslint.jsEnable": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable javascript for tslint"
+        },
+        "tslint.autoFixOnSave": {
+          "type": "boolean",
+          "default": false
+        },
+        "tslint.configFile": {
+          "type": "string",
+          "default": "tslint.json",
+          "description": "Config file of tslint, could be relative path from workspace root"
+        },
+        "tslint.ignoreDefinitionFiles": {
+          "type": "boolean",
+          "default": true
+        },
+        "tslint.exclude": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          }
+        },
+        "tslint.validateWithDefaultConfig": {
+          "type": "boolean",
+          "default": true
+        },
+        "tslint.run": {
+          "type": "string",
+          "default": "onType",
+          "description": "Run mode of tslint",
+          "enum": ["onType", "onSave"]
+        },
+        "tslint.alwaysShowRuleFailuresAsWarnings": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    }
+  },
+  "author": "chemzqm@gmail.com",
+  "license": "MIT",
+  "devDependencies": {
+    "@chemzqm/tsconfig": "^0.0.3",
+    "@chemzqm/tslint-config": "^1.0.17",
+    "@types/node": "^10.9.4",
+    "coc.nvim": "^0.0.15",
+    "rimraf": "^2.6.2",
+    "tslint": "^5.11.0",
+    "typescript": "^3.0.3"
+  },
+  "dependencies": {
+    "minimatch": "^3.0.4",
+    "semver": "^5.5.1",
+    "tslib": "^1.9.3",
+    "vscode-languageserver": "^5.0.3",
+    "vscode-languageserver-protocol": "^3.12.0",
+    "vscode-uri": "^1.0.6",
+    "which": "^1.3.1",
+    "wxml-langserver": "^2.0.4"
+  }
+}
