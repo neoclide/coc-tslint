@@ -115,9 +115,7 @@ let globalPackageManagerPath: Map<string, string> = new Map() // map stores unde
 
 function computeKey(diagnostic: server.Diagnostic): string {
   let range = diagnostic.range
-  return `[${range.start.line},${range.start.character},${range.end.line},${
-    range.end.character
-    }]-${diagnostic.code}`
+  return `[${range.start.line},${range.start.character},${range.end.line},${range.end.character}]-${diagnostic.code}`
 }
 
 export interface AutoFix {
@@ -700,7 +698,7 @@ function testForExclusionPattern(path: string, pattern: string): boolean {
 }
 
 function fileIsExcluded(settings: Settings, path: string): boolean {
-  if (settings.ignoreDefinitionFiles) {
+  if (settings.ignoreDefinitionFiles !== false) {
     if (path.endsWith('.d.ts')) {
       return true
     }
