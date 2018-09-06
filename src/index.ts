@@ -59,7 +59,7 @@ interface Settings {
 
 export async function activate(context: ExtensionContext): Promise<void> {
   let { subscriptions, logger } = context
-  const config = workspace.getConfiguration().get('tslint') as any
+  const config = workspace.getConfiguration().get('tslint', {}) as any
   const enable = config.enable
   if (enable === false) return
   const file = context.asAbsolutePath('./lib/server/index.js')

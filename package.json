@@ -49,10 +49,7 @@
         },
         "tslint.execArgv": {
           "type": "array",
-          "default": [
-            "--nolazy",
-            "--inspect-brk=6045"
-          ],
+          "default": [],
           "items": {
             "type": "string"
           }
