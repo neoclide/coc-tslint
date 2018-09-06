@@ -2,6 +2,7 @@ import { exec } from 'child_process'
 import { commands, ExtensionContext, LanguageClient, LanguageClientOptions, QuickfixItem, ServerOptions, services, ServiceStat, TextDocumentWillSaveEvent, TransportKind, workspace, WorkspaceMiddleware } from 'coc.nvim'
 import { ProviderResult } from 'coc.nvim/lib/provider'
 import fs from 'fs'
+import os from 'os'
 import path from 'path'
 import { CancellationToken, CodeAction, CodeActionContext, Command, ConfigurationParams, Diagnostic, RequestType, TextDocument, TextDocumentIdentifier, TextDocumentSaveReason, TextEdit } from 'vscode-languageserver-protocol'
 import Uri from 'vscode-uri'
@@ -105,15 +106,18 @@ export async function activate(context: ExtensionContext): Promise<void> {
         return next(document, range, newContext, token)
       },
       workspace: {
-        configuration: (params: ConfigurationParams, token: CancellationToken, next: Function): any[] => {
+        configuration: (params: ConfigurationParams, token: CancellationToken, next: Function): any => {
           if (!params.items) return []
           let result: Settings[] = next(params, token, next)
           if (!result || !result.length) return []
           let config: Settings = Object.assign({}, result[0])
           let configFile = result[0].configFile || 'tslint.json'
           config.configFile = convertAbsolute(configFile)
-          config.workspaceFolderPath = workspace.root
-          return [config]
+          return getConfigFile().then(file => {
+            config.configFile = file
+            config.workspaceFolderPath = workspace.root
+            return [config]
+          })
         }
       } as WorkspaceMiddleware
     }
@@ -307,10 +311,35 @@ async function createDefaultConfiguration(): Promise<void> {
   }
 }
 
+async function getConfigFile(): Promise<string> {
+  let doc = await workspace.document
+  let u = Uri.parse(doc.uri)
+  let dir: string
+  if (u.scheme !== 'file') {
+    dir = workspace.cwd
+  } else {
+    dir = path.dirname(u.fsPath)
+  }
+  return resolveFile(dir, 'tslint.json')
+}
+
+function resolveFile(dir: string, file: string): string {
+  let { root } = path.parse(dir)
+  let home = os.homedir()
+  while (dir != root && dir != home) {
+    let p = path.join(dir, file)
+    if (fs.existsSync(p)) {
+      return p
+    }
+    dir = path.dirname(dir)
+  }
+  return null
+}
+
 async function lintProject(): Promise<void> {
   const folderPath = workspace.root
   const tslintCmd = await findTslint(folderPath)
-  const tslintConfigFile = path.join(folderPath, 'tslint.json')
+  const tslintConfigFile = await getConfigFile()
   if (!tslintCmd) return
   let cmd = `${tslintCmd} -c ${tslintConfigFile} -p .`
   let res = await workspace.runTerminalCommand(cmd)
