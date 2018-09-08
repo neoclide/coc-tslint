@@ -128,21 +128,22 @@ export async function activate(context: ExtensionContext): Promise<void> {
   )
   let isReady = false
 
+  subscriptions.push(commands.registerCommand('tslint.fixAllProblems', fixAllProblems))
+  subscriptions.push(commands.registerCommand('tslint.createConfig', createDefaultConfiguration))
+  subscriptions.push(commands.registerCommand('tslint.lintProject', lintProject))
+  subscriptions.push(workspace.onWillSaveUntil(willSaveTextDocument, null, 'tslint'))
+  subscriptions.push(commands.registerCommand('_tslint.applySingleFix', applyTextEdits))
+  subscriptions.push(commands.registerCommand('_tslint.applySameFixes', applyTextEdits))
+  subscriptions.push(commands.registerCommand('_tslint.applyAllFixes', applyTextEdits))
+  subscriptions.push(commands.registerCommand('_tslint.applyDisableRule', applyDisableRuleEdit))
+  subscriptions.push(commands.registerCommand('_tslint.showRuleDocumentation', showRuleDocumentation))
+
   client.onReady().then(() => {
     if (isReady) return
     isReady = true
     client.onRequest(NoTSLintLibraryRequest.type, () => {
       return {}
     })
-    subscriptions.push(workspace.onWillSaveUntil(willSaveTextDocument, null, 'tslint'))
-    subscriptions.push(commands.registerCommand('_tslint.applySingleFix', applyTextEdits))
-    subscriptions.push(commands.registerCommand('_tslint.applySameFixes', applyTextEdits))
-    subscriptions.push(commands.registerCommand('_tslint.applyAllFixes', applyTextEdits))
-    subscriptions.push(commands.registerCommand('_tslint.applyDisableRule', applyDisableRuleEdit))
-    subscriptions.push(commands.registerCommand('_tslint.showRuleDocumentation', showRuleDocumentation))
-    subscriptions.push(commands.registerCommand('tslint.fixAllProblems', fixAllProblems))
-    subscriptions.push(commands.registerCommand('tslint.createConfig', createDefaultConfiguration))
-    subscriptions.push(commands.registerCommand('tslint.lintProject', lintProject))
   })
 
   function willSaveTextDocument(e: TextDocumentWillSaveEvent): void {

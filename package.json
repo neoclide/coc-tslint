@@ -12,6 +12,14 @@
     "build": "tsc -p tsconfig.json",
     "prepare": "yarn clean && yarn build"
   },
+  "activationEvents": [
+    "onLanguage:typescript",
+    "onLanguage:typescript.jsx",
+    "onLanguage:typescript.tsx",
+    "onCommand:tslint.fixAllProblems",
+    "onCommand:tslint.createConfig",
+    "onCommand:tslint.lintProject"
+  ],
   "contributes": {
     "commands": [
       {
@@ -25,9 +33,9 @@
         "command": "tslint.createConfig"
       },
       {
-        "title": "Show output",
+        "title": "Lint current project",
         "category": "TSLint",
-        "command": "tslint.showOutputChannel"
+        "command": "tslint.lintProject"
       }
     ],
     "configuration": {
