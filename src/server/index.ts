@@ -12,6 +12,9 @@ import * as server from 'vscode-languageserver'
 import Uri from 'vscode-uri'
 import { Delayer } from './delayer'
 import { createVscFixForRuleFailure, TSLintAutofixEdit } from './fixer'
+import * as ts from 'typescript'
+
+const tsPrograms = new Map<string, ts.Program>()
 
 // Settings as defined in VS Code
 interface Settings {
@@ -19,6 +22,7 @@ interface Settings {
   jsEnable: boolean
   rulesDirectory: string | string[]
   configFile: string
+  tsConfigFile: string
   ignoreDefinitionFiles: boolean
   exclude: string | string[]
   validateWithDefaultConfig: boolean
@@ -272,7 +276,8 @@ async function getConfiguration(
   uri: string,
   filePath: string,
   library: any,
-  configFileName: string | null
+  configFileName: string | null,
+  tsconfig: string
 ): Promise<Configuration | undefined> {
   trace('getConfiguration for' + uri)
 
@@ -572,7 +577,7 @@ async function doValidate(
   let configuration: Configuration | undefined
   trace('validateTextDocument: about to getConfiguration')
   try {
-    configuration = await getConfiguration(uri, fsPath, library, configFile)
+    configuration = await getConfiguration(uri, fsPath, library, configFile, settings.tsConfigFile)
   } catch (err) {
     // this should not happen since we guard against incorrect configurations
     showConfigurationFailure(conn, err)
@@ -629,7 +634,8 @@ async function doValidate(
     // protect against tslint crashes
     let linter = getLinterFromLibrary(library)
     if (isTsLintVersion4(library)) {
-      let tslint = new linter(options)
+      let program = settings.run == 'onSave' ? Linter.createProgram(settings.tsConfigFile) : undefined
+      let tslint = new linter(options, program)
       trace(`Linting: start linting with tslint > version 4`)
       tslint.lint(fsPath, contents, configuration.linterConfiguration)
       result = tslint.getResult()
@@ -731,10 +737,9 @@ documents.onDidChangeContent(async event => {
     trace('onDidChangeContent: triggerValidateDocument')
     triggerValidateDocument(event.document)
   }
-  // clear the diagnostics when validating on save and when the document is modified
-  else if (settings && settings.run === 'onSave') {
-    connection.sendDiagnostics({ uri: event.document.uri, diagnostics: [] })
-  }
+  // else if (settings && settings.run === 'onSave') {
+  //   connection.sendDiagnostics({ uri: event.document.uri, diagnostics: [] })
+  // }
 })
 
 documents.onDidSave(async event => {
@@ -1230,6 +1235,15 @@ function getGlobalPackageManagerPath(
   }
   trace(`Done - Resolve Global Package Manager Path for: ${packageManager}`)
   return globalPackageManagerPath.get(packageManager)
+}
+
+function createTsProgram(tsconfig: string): ts.Program {
+  let p = tsPrograms.get(tsconfig)
+  if (!p) {
+    p = Linter.createProgram(tsconfig)
+    tsPrograms.set(tsconfig, p)
+  }
+  return p
 }
 
 connection.listen()
