@@ -4,7 +4,7 @@ import { ProviderResult } from 'coc.nvim/lib/provider'
 import fs from 'fs'
 import path from 'path'
 import { Linter } from 'tslint'
-import { CancellationToken, CodeAction, CodeActionContext, Command, ConfigurationParams, Diagnostic, RequestType, TextDocument, TextDocumentIdentifier, TextDocumentSaveReason, TextEdit } from 'vscode-languageserver-protocol'
+import { CancellationToken, Location, CodeAction, CodeActionContext, Command, ConfigurationParams, Diagnostic, RequestType, TextDocument, TextDocumentIdentifier, TextDocumentSaveReason, TextEdit, Position } from 'vscode-languageserver-protocol'
 import Uri from 'vscode-uri'
 import which from 'which'
 import pkgDir from 'pkg-dir'
@@ -60,9 +60,12 @@ interface Settings {
   workspaceFolderPath: string // 'virtual' setting sent to the server
 }
 
+let statusItem = workspace.createStatusBarItem(0, { progress: true })
+statusItem.text = 'linting'
+
 export async function activate(context: ExtensionContext): Promise<void> {
   let { subscriptions, logger } = context
-  const config = workspace.getConfiguration().get('tslint', {}) as any
+  const config = workspace.getConfiguration().get<any>('tslint', {})
   const enable = config.enable
   if (enable === false) return
   const file = context.asAbsolutePath('./lib/server/index.js')
@@ -151,6 +154,8 @@ export async function activate(context: ExtensionContext): Promise<void> {
     client.onRequest(NoTSLintLibraryRequest.type, () => {
       return {}
     })
+  }, _e => {
+    // noop
   })
 
   function willSaveTextDocument(e: TextDocumentWillSaveEvent): void {
@@ -358,8 +363,10 @@ async function lintProject(): Promise<void> {
   const tslintCmd = await findTslint(folderPath)
   const tslintConfigFile = await getConfigFile()
   if (!tslintCmd) return
+  statusItem.show()
   let cmd = `${tslintCmd} -c ${tslintConfigFile} -p .`
-  let res = await workspace.runTerminalCommand(cmd)
+  let res = await workspace.runTerminalCommand(cmd, workspace.cwd, true)
+  statusItem.hide()
   if (res.success) return
   let { bufnr } = res
   await workspace.nvim.command(`silent! bd! ${bufnr}`)
@@ -370,20 +377,14 @@ async function lintProject(): Promise<void> {
     if (!ms) continue
     let [, type, file, lnum, col, message] = ms
     let uri = Uri.file(file).toString()
-    let doc = workspace.getDocument(uri)
-    let bufnr = doc ? doc.bufnr : 0
-    let item: QuickfixItem = {
-      filename: path.relative(workspace.cwd, file),
-      lnum: Number(lnum),
-      col: Number(col),
-      type: type.slice(0, 1).toUpperCase(),
-      text: message
-    }
-    if (bufnr) item.bufnr = bufnr
+    let p: Position = Position.create(Number(lnum) - 1, Number(col) - 1)
+    let location = Location.create(uri, { start: p, end: p })
+    let item = await workspace.getQuickfixItem(location, message, type.slice(0, 1).toUpperCase())
     items.push(item)
   }
+
   let { nvim } = workspace
-  await nvim.call('setqflist', [items, ' ', 'Results of tslint'])
+  await nvim.call('setqflist', [[], ' ', { title: 'Results of tslint', items }])
   await nvim.command('doautocmd User CocQuickfixChange')
 }
 
