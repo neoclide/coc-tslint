@@ -119,14 +119,19 @@ export async function activate(context: ExtensionContext): Promise<void> {
           if (!result || !result.length) return []
           let config: Settings = Object.assign({}, result[0])
           let { configFile } = result[0]
-          if (configFile) {
-            config.configFile = convertAbsolute(configFile)
-          } else {
-            let file = await getConfigFile()
-            config.configFile = file
-            config.workspaceFolderPath = workspace.root
+          try {
+            if (configFile) {
+              config.configFile = convertAbsolute(configFile)
+            } else {
+              let file = await getConfigFile()
+              config.configFile = file
+              config.workspaceFolderPath = workspace.root
+            }
+            config.tsConfigFile = await findTsConfigFile()
+          } catch (e) {
+            logger.error(e)
+            return []
           }
-          config.tsConfigFile = await findTsConfigFile()
           return [config]
         }
       } as WorkspaceMiddleware
