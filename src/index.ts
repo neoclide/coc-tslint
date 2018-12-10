@@ -1,14 +1,14 @@
 import { exec } from 'child_process'
 import { commands, ExtensionContext, LanguageClient, LanguageClientOptions, QuickfixItem, ServerOptions, services, ServiceStat, TextDocumentWillSaveEvent, TransportKind, workspace, WorkspaceMiddleware } from 'coc.nvim'
 import { ProviderResult } from 'coc.nvim/lib/provider'
-import fs, { readSync } from 'fs'
+import findUp from 'find-up'
+import fs from 'fs'
 import path from 'path'
+import pkgDir from 'pkg-dir'
 import { Linter } from 'tslint'
-import { CancellationToken, Location, CodeAction, CodeActionContext, Command, ConfigurationParams, Diagnostic, RequestType, TextDocument, TextDocumentIdentifier, TextDocumentSaveReason, TextEdit, Position } from 'vscode-languageserver-protocol'
+import { CancellationToken, CodeAction, CodeActionContext, Command, ConfigurationParams, Diagnostic, Location, Position, RequestType, TextDocument, TextDocumentIdentifier, TextDocumentSaveReason, TextEdit } from 'vscode-languageserver-protocol'
 import Uri from 'vscode-uri'
 import which from 'which'
-import pkgDir from 'pkg-dir'
-import findUp from 'find-up'
 const errorRegex = /^(\w+):\s+([^\[]+)\[(\d+),\s*(\d+)\]:\s+(.*)$/
 
 interface AllFixesParams {
@@ -119,15 +119,10 @@ export async function activate(context: ExtensionContext): Promise<void> {
           if (!result || !result.length) return []
           let uri = params.items[0].scopeUri
           let config: Settings = Object.assign({}, result[0])
-          let { configFile } = result[0]
           try {
-            if (configFile) {
-              config.configFile = convertAbsolute(configFile)
-            } else {
-              let file = await getConfigFile(uri)
-              config.configFile = file
-              config.workspaceFolderPath = workspace.root
-            }
+            let file = await getConfigFile(uri)
+            config.configFile = file
+            config.workspaceFolderPath = workspace.root
             config.tsConfigFile = await findTsConfigFile()
           } catch (e) {
             logger.error(e)
@@ -336,7 +331,7 @@ async function baseDir(): Promise<string> {
   let u = Uri.parse(doc.uri)
   let dir: string
   if (u.scheme !== 'file') {
-    dir = workspace.cwd
+    dir = workspace.root
   } else {
     dir = path.dirname(u.fsPath)
   }
@@ -347,7 +342,7 @@ async function getConfigFile(uri?: string): Promise<string> {
   let dir: string
   if (uri) {
     let file = Uri.parse(uri).fsPath
-    dir = path.dirname(file)
+    if (file) dir = path.dirname(file)
   }
   dir = dir || await baseDir()
   return Linter.findConfigurationPath(null, dir)
