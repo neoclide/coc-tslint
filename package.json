@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "publisher": "chemzqm",
   "engines": {
-    "coc": "^0.0.15"
+    "coc": "^0.0.38"
   },
   "keywords": [
     "coc.nvim",
@@ -18,8 +18,7 @@
   },
   "activationEvents": [
     "onLanguage:typescript",
-    "onLanguage:typescript.jsx",
-    "onLanguage:typescript.tsx",
+    "onLanguage:typescriptreact",
     "onCommand:tslint.fixAllProblems",
     "onCommand:tslint.createConfig",
     "onCommand:tslint.lintProject"
@@ -77,7 +76,7 @@
         },
         "tslint.configFile": {
           "type": "string",
-          "default": "tslint.json",
+          "default": null,
           "description": "Config file of tslint, could be relative path from workspace root"
         },
         "tslint.ignoreDefinitionFiles": {

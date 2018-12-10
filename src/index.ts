@@ -1,7 +1,7 @@
 import { exec } from 'child_process'
 import { commands, ExtensionContext, LanguageClient, LanguageClientOptions, QuickfixItem, ServerOptions, services, ServiceStat, TextDocumentWillSaveEvent, TransportKind, workspace, WorkspaceMiddleware } from 'coc.nvim'
 import { ProviderResult } from 'coc.nvim/lib/provider'
-import fs from 'fs'
+import fs, { readSync } from 'fs'
 import path from 'path'
 import { Linter } from 'tslint'
 import { CancellationToken, Location, CodeAction, CodeActionContext, Command, ConfigurationParams, Diagnostic, RequestType, TextDocument, TextDocumentIdentifier, TextDocumentSaveReason, TextEdit, Position } from 'vscode-languageserver-protocol'
@@ -117,13 +117,14 @@ export async function activate(context: ExtensionContext): Promise<void> {
           if (!params.items) return []
           let result: Settings[] = next(params, token, next)
           if (!result || !result.length) return []
+          let uri = params.items[0].scopeUri
           let config: Settings = Object.assign({}, result[0])
           let { configFile } = result[0]
           try {
             if (configFile) {
               config.configFile = convertAbsolute(configFile)
             } else {
-              let file = await getConfigFile()
+              let file = await getConfigFile(uri)
               config.configFile = file
               config.workspaceFolderPath = workspace.root
             }
@@ -342,8 +343,13 @@ async function baseDir(): Promise<string> {
   return dir
 }
 
-async function getConfigFile(): Promise<string> {
-  let dir = await baseDir()
+async function getConfigFile(uri?: string): Promise<string> {
+  let dir: string
+  if (uri) {
+    let file = Uri.parse(uri).fsPath
+    dir = path.dirname(file)
+  }
+  dir = dir || await baseDir()
   return Linter.findConfigurationPath(null, dir)
 }
 
