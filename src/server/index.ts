@@ -10,6 +10,7 @@ import tslint, { Linter } from 'tslint'
 import * as util from 'util'
 import * as server from 'vscode-languageserver'
 import Uri from 'vscode-uri'
+import resolveFrom from 'resolve-from'
 import { Delayer } from './delayer'
 import { createVscFixForRuleFailure, TSLintAutofixEdit } from './fixer'
 import * as ts from 'typescript'
@@ -169,7 +170,7 @@ let document2Library: Map<
 
 let validationDelayer = new Map<string, Delayer<void>>() // key is the URI of the document
 
-// let configFileWatchers: Map<string, fs.FSWatcher> = new Map();
+// let configFileWatchers: Map<string, fs.FSWatcher> = new Map()
 
 function makeDiagnostic(
   settings: Settings | undefined,
@@ -327,7 +328,7 @@ function getErrorMessage(err: any, document: server.TextDocument): string {
   if (typeof err.message === 'string' || err.message instanceof String) {
     errorMessage = err.message as string
   }
-  let fsPath = server.Files.uriToFilePath(document.uri)
+  let fsPath = Uri.parse(document.uri).fsPath
   let message = `vscode-tslint: '${errorMessage}' while validating: ${fsPath} stacktrace: ${
     err.stack
     }`
@@ -488,31 +489,12 @@ async function loadLibrary(docUri: string) {
     let file = uri.fsPath
     let directory = path.dirname(file)
     if (settings && settings.nodePath) {
-      promise = server.Files.resolve(
-        'tslint',
-        settings.nodePath,
-        settings.nodePath!,
-        trace
-      ).then<string, string>(undefined, () => {
-        return server.Files.resolve('tslint', getGlobalPath(), directory, trace)
-      })
+      promise = resolveModule('tslint', settings.nodePath, getGlobalPath())
     } else {
-      promise = server.Files.resolve(
-        'tslint',
-        undefined,
-        directory,
-        trace
-      ).then<string, string>(undefined, () => {
-        return (promise = server.Files.resolve(
-          'tslint',
-          getGlobalPath(),
-          directory,
-          trace
-        ))
-      })
+      promise = resolveModule('tslint', directory, getGlobalPath())
     }
   } else {
-    promise = server.Files.resolve('tslint', getGlobalPath(), undefined!, trace) // cwd argument can be undefined
+    promise = resolveModule('tslint', process.cwd(), getGlobalPath())
   }
   document2Library.set(
     docUri,
@@ -549,7 +531,7 @@ async function doValidate(
   delete codeFixActions[uri]
   delete codeDisableRuleActions[uri]
 
-  let fsPath = server.Files.uriToFilePath(uri)
+  let fsPath = Uri.parse(uri).fsPath
   if (!fsPath) {
     // tslint can only lint files on disk
     trace(`No linting: file is not saved on disk`)
@@ -784,7 +766,7 @@ function tslintConfigurationValid(): boolean {
     documents.all().forEach(each => {
       let fsPath = server.Files.uriToFilePath(each.uri)
       if (fsPath) {
-        // TODO getConfiguration(fsPath, configFile);
+        // TODO getConfiguration(fsPath, configFile)
       }
     })
   } catch (err) {
@@ -1247,3 +1229,16 @@ function createTsProgram(tsconfig: string): ts.Program {
 }
 
 connection.listen()
+
+export function resolveModule(name: string, localPath: string, globalPath: string): Promise<string> {
+  if (localPath) {
+    let path = resolveFrom.silent(localPath, name)
+    if (path) return Promise.resolve(path)
+  }
+  try {
+    let path = resolveFrom(globalPath, name)
+    return Promise.resolve(path)
+  } catch (e) {
+    return Promise.reject(e)
+  }
+}
