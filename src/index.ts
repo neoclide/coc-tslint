@@ -390,8 +390,8 @@ async function lintProject(): Promise<void> {
   }
 
   let { nvim } = workspace
-  await nvim.call('setqflist', [[], ' ', { title: 'Results of tslint', items }])
-  await nvim.command('doautocmd User CocQuickfixChange')
+  await nvim.setVar('coc_jump_locations', items)
+  await nvim.command('doautocmd User CocLocationsChange')
 }
 
 async function applyTextEdits(uri: string, _documentVersion: number, edits: TextEdit[]): Promise<boolean> {
