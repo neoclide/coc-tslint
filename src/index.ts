@@ -69,7 +69,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
   const enable = config.enable
   if (enable === false) return
   const file = context.asAbsolutePath('./lib/server/index.js')
-  const filetypes = config.filetypes || ['typescript', 'typescript.jsx', 'typescript.tsx']
+  const filetypes = config.filetypes || ['typescript', 'typescriptreact']
   // lint file only
   const selector = filetypes.map(filetype => {
     return { language: filetype, scheme: 'file' }
@@ -262,11 +262,11 @@ export async function activate(context: ExtensionContext): Promise<void> {
 
 function isTypeScriptDocument(document: TextDocument): boolean {
   let { languageId } = document
-  return ['typescript', 'typescript.jsx', 'typescript.tsx'].indexOf(languageId) !== -1
+  return ['typescript', 'typescriptreact'].indexOf(languageId) !== -1
 }
 
 function isJavaScriptDocument(languageId): boolean {
-  return languageId === 'javascript' || languageId === 'javascript.jsx'
+  return languageId === 'javascript' || languageId === 'typescriptreact'
 }
 
 function isEnabledForJavaScriptDocument(document: TextDocument): boolean {
@@ -421,9 +421,4 @@ function showRuleDocumentation(_uri: string, _documentVersion: number, _edits: T
   const tslintDocBaseURL = 'https://palantir.github.io/tslint/rules'
   if (!ruleId) return
   workspace.nvim.call('coc#util#open_url', tslintDocBaseURL + '/' + ruleId, true)
-}
-
-function convertAbsolute(file: string): string {
-  if (path.isAbsolute(file)) return file
-  return path.join(workspace.root, file)
 }
