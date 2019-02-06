@@ -6,10 +6,10 @@ import fs from 'fs'
 import path from 'path'
 import pkgDir from 'pkg-dir'
 import { Linter } from 'tslint'
-import { CancellationToken, CodeAction, CodeActionContext, Command, ConfigurationParams, Diagnostic, Location, Position, RequestType, TextDocument, TextDocumentIdentifier, TextDocumentSaveReason, TextEdit } from 'vscode-languageserver-protocol'
+import { CancellationToken, CodeAction, CodeActionContext, Command, ConfigurationParams, Diagnostic, RequestType, TextDocument, TextDocumentIdentifier, TextDocumentSaveReason, TextEdit } from 'vscode-languageserver-protocol'
 import Uri from 'vscode-uri'
 import which from 'which'
-const errorRegex = /^(\w+):\s+([^\[]+)\[(\d+),\s*(\d+)\]:\s+(.*)$/
+const errorRegex = /^\s*(\w+):\s+([^:]+):(\d+):\s*(\d+)\s+-\s+(.*)/
 
 interface AllFixesParams {
   readonly textDocument: TextDocumentIdentifier
@@ -290,12 +290,12 @@ async function findTslint(rootPath: string): Promise<string> {
   if (platform === 'win32' &&
     (await exists(path.join(rootPath, 'node_modules', '.bin', 'tslint.cmd')))
   ) {
-    return path.join('.', 'node_modules', '.bin', 'tslint.cmd')
+    return path.join('node_modules', '.bin', 'tslint.cmd')
   } else if (
     (platform === 'linux' || platform === 'darwin') &&
     (await exists(path.join(rootPath, 'node_modules', '.bin', 'tslint')))
   ) {
-    return path.join('.', 'node_modules', '.bin', 'tslint')
+    return path.join('node_modules', '.bin', 'tslint')
   } else {
     try {
       return which.sync('tslint')
@@ -371,27 +371,37 @@ async function lintProject(): Promise<void> {
   if (!tslintCmd) return
   statusItem.show()
   let cmd = `${tslintCmd} -c ${tslintConfigFile} -p .`
-  let res = await workspace.runTerminalCommand(cmd, workspace.cwd, true)
+  let content: string
+  try {
+    content = await runCommand(cmd, folderPath, 30000)
+  } catch (e) {
+    statusItem.hide()
+    workspace.showMessage(e.message, 'error')
+    return
+  }
   statusItem.hide()
-  if (res.success) return
-  let { bufnr } = res
-  await workspace.nvim.command(`silent! bd! ${bufnr}`)
-  let lines = res.content.split('\n')
+  let lines = content.split('\n')
   let items: QuickfixItem[] = []
   for (let line of lines) {
     let ms = line.match(errorRegex)
     if (!ms) continue
     let [, type, file, lnum, col, message] = ms
-    let uri = Uri.file(file).toString()
-    let p: Position = Position.create(Number(lnum) - 1, Number(col) - 1)
-    let location = Location.create(uri, { start: p, end: p })
-    let item = await workspace.getQuickfixItem(location, message, type.slice(0, 1).toUpperCase())
-    items.push(item)
+    items.push({
+      filename: file,
+      lnum: Number(lnum),
+      col: Number(col),
+      text: message,
+      type: type.startsWith('E') ? 'Error' : 'Warning'
+    })
   }
 
   let { nvim } = workspace
-  await nvim.setVar('coc_jump_locations', items)
-  await nvim.command('doautocmd User CocLocationsChange')
+  if (items.length) {
+    await nvim.setVar('coc_jump_locations', items)
+    await nvim.command('doautocmd User CocLocationsChange')
+  } else {
+    workspace.showMessage('tslint: no error found', 'more')
+  }
 }
 
 async function applyTextEdits(uri: string, _documentVersion: number, edits: TextEdit[]): Promise<boolean> {
@@ -421,4 +431,19 @@ function showRuleDocumentation(_uri: string, _documentVersion: number, _edits: T
   const tslintDocBaseURL = 'https://palantir.github.io/tslint/rules'
   if (!ruleId) return
   workspace.nvim.call('coc#util#open_url', tslintDocBaseURL + '/' + ruleId, true)
+}
+
+function runCommand(cmd: string, cwd: string, timeout?: number): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    let timer: NodeJS.Timer
+    if (timeout) {
+      timer = setTimeout(() => {
+        reject(new Error(`timeout after ${timeout}s`))
+      }, timeout * 1000)
+    }
+    exec(cmd, { cwd, env: process.env, timeout }, (_err, stdout) => {
+      if (timer) clearTimeout(timer)
+      resolve(stdout || '')
+    })
+  })
 }
