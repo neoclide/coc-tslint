@@ -13,9 +13,10 @@ import Uri from 'vscode-uri'
 import resolveFrom from 'resolve-from'
 import { Delayer } from './delayer'
 import { createVscFixForRuleFailure, TSLintAutofixEdit } from './fixer'
-import * as ts from 'typescript'
 
-const tsPrograms = new Map<string, ts.Program>()
+declare var __webpack_require__: any
+declare var __non_webpack_require__: any
+const requireFunc = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require
 
 // Settings as defined in VS Code
 interface Settings {
@@ -158,7 +159,7 @@ namespace NoTSLintLibraryRequest {
     NoTSLintLibraryResult,
     void,
     void
-    >('tslint/noLibrary')
+  >('tslint/noLibrary')
 }
 
 // if tslint < tslint4 then the linter is the module therefore the type `any`
@@ -166,7 +167,7 @@ let path2Library: Map<string, typeof tslint.Linter | any> = new Map()
 let document2Library: Map<
   string,
   Thenable<typeof tslint.Linter | any>
-  > = new Map()
+> = new Map()
 
 let validationDelayer = new Map<string, Delayer<void>>() // key is the URI of the document
 
@@ -502,7 +503,7 @@ async function loadLibrary(docUri: string) {
       path => {
         let library
         if (!path2Library.has(path)) {
-          library = require(path)
+          library = requireFunc(path)
           connection.console.info(`TSLint library loaded from: ${path}`)
           path2Library.set(path, library)
         }
@@ -795,9 +796,9 @@ connection.onDidChangeWatchedFiles(params => {
   params.changes.forEach(element => {
     let configFilePath = server.Files.uriToFilePath(element.uri)
     if (configFilePath) {
-      let cached = require.cache[configFilePath]
+      let cached = requireFunc.cache[configFilePath]
       if (cached) {
-        delete require.cache[configFilePath]
+        delete requireFunc.cache[configFilePath]
       }
     }
   })
@@ -1131,7 +1132,7 @@ namespace AllFixesRequest {
     AllFixesResult,
     void,
     void
-    >('textDocument/tslint/allFixes')
+  >('textDocument/tslint/allFixes')
 }
 
 connection.onRequest(AllFixesRequest.type, async params => {
@@ -1217,15 +1218,6 @@ function getGlobalPackageManagerPath(
   }
   trace(`Done - Resolve Global Package Manager Path for: ${packageManager}`)
   return globalPackageManagerPath.get(packageManager)
-}
-
-function createTsProgram(tsconfig: string): ts.Program {
-  let p = tsPrograms.get(tsconfig)
-  if (!p) {
-    p = Linter.createProgram(tsconfig)
-    tsPrograms.set(tsconfig, p)
-  }
-  return p
 }
 
 connection.listen()

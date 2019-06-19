@@ -68,7 +68,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
   const config = workspace.getConfiguration().get<any>('tslint', {})
   const enable = config.enable
   if (enable === false) return
-  const file = context.asAbsolutePath('./lib/server/index.js')
+  const file = context.asAbsolutePath('./lib/server.js')
   const filetypes = config.filetypes || ['typescript', 'typescriptreact']
   // lint file only
   const selector = filetypes.map(filetype => {
