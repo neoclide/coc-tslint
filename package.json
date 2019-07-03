@@ -1,6 +1,6 @@
 {
   "name": "coc-tslint",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "description": "tslint extension for coc.nvim",
   "main": "lib/index.js",
   "publisher": "chemzqm",
