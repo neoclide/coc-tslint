@@ -1,5 +1,7 @@
 # coc-tslint
 
+Tthis extension is not maintained anymore, it can't work with latest coc.nvim.
+
 Tslint language server extension for [coc.nvim](https://github.com/neoclide/coc.nvim).
 
 The `tslint` module is resolved from current file and then global modules of `npm` and `yarn`.
